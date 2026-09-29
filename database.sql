@@ -151,6 +151,154 @@ CREATE TABLE IF NOT EXISTS prueba_virtual (
 ) ENGINE = InnoDB;
 
 -- ==============================================
+-- TABLA: oficina
+-- ==============================================
+CREATE TABLE IF NOT EXISTS oficina (
+    id_oficina INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    ciudad VARCHAR(80) NOT NULL,
+    direccion VARCHAR(150) NULL,
+    telefono VARCHAR(20) NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_oficina),
+    UNIQUE INDEX idx_oficina_nombre (nombre)
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: empleado
+-- ==============================================
+CREATE TABLE IF NOT EXISTS empleado (
+    id_empleado INT NOT NULL AUTO_INCREMENT,
+    id_oficina INT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    cargo VARCHAR(50) NOT NULL DEFAULT 'asesor',
+    correo VARCHAR(100) NOT NULL UNIQUE,
+    telefono VARCHAR(20) NULL,
+    fecha_ingreso DATE NOT NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_empleado),
+    INDEX idx_empleado_oficina (id_oficina),
+    CONSTRAINT fk_emp_oficina FOREIGN KEY (id_oficina) REFERENCES oficina (id_oficina) ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: tipo_credito
+-- ==============================================
+CREATE TABLE IF NOT EXISTS tipo_credito (
+    id_tipo INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(80) NOT NULL,
+    descripcion TEXT NULL,
+    monto_minimo DECIMAL(12,2) NOT NULL DEFAULT 0,
+    monto_maximo DECIMAL(12,2) NOT NULL,
+    tasa_interes DECIMAL(5,2) NOT NULL DEFAULT 2.50,
+    plazo_maximo INT NOT NULL DEFAULT 12,
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_tipo),
+    UNIQUE INDEX idx_tipo_nombre (nombre)
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: documento
+-- ==============================================
+CREATE TABLE IF NOT EXISTS documento (
+    id_documento INT NOT NULL AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    tipo_documento VARCHAR(50) NOT NULL,
+    nombre_archivo VARCHAR(150) NOT NULL,
+    ruta VARCHAR(255) NULL,
+    estado ENUM('pendiente', 'aprobado', 'rechazado') NOT NULL DEFAULT 'pendiente',
+    observaciones TEXT NULL,
+    fecha_carga DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_documento),
+    INDEX idx_documento_usuario (id_usuario, estado),
+    CONSTRAINT fk_doc_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: cuota
+-- ==============================================
+CREATE TABLE IF NOT EXISTS cuota (
+    id_cuota INT NOT NULL AUTO_INCREMENT,
+    id_credito INT NOT NULL,
+    numero_cuota INT NOT NULL,
+    monto_cuota DECIMAL(12,2) NOT NULL,
+    monto_pagado DECIMAL(12,2) NOT NULL DEFAULT 0,
+    fecha_vencimiento DATE NOT NULL,
+    fecha_pago DATETIME NULL,
+    estado ENUM('pendiente', 'pagada', 'vencida') NOT NULL DEFAULT 'pendiente',
+    PRIMARY KEY (id_cuota),
+    UNIQUE INDEX idx_cuota_credito_numero (id_credito, numero_cuota),
+    INDEX idx_cuota_estado (estado),
+    CONSTRAINT fk_cuota_credito FOREIGN KEY (id_credito) REFERENCES credito (id_credito) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: garantia
+-- ==============================================
+CREATE TABLE IF NOT EXISTS garantia (
+    id_garantia INT NOT NULL AUTO_INCREMENT,
+    id_credito INT NULL,
+    id_usuario INT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    descripcion TEXT NULL,
+    valor_estimado DECIMAL(12,2) NOT NULL DEFAULT 0,
+    estado ENUM('registrada', 'verificada', 'liberada') NOT NULL DEFAULT 'registrada',
+    fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_garantia),
+    INDEX idx_garantia_credito (id_credito),
+    CONSTRAINT fk_gar_credito FOREIGN KEY (id_credito) REFERENCES credito (id_credito) ON DELETE CASCADE,
+    CONSTRAINT fk_gar_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: evaluacion
+-- ==============================================
+CREATE TABLE IF NOT EXISTS evaluacion (
+    id_evaluacion INT NOT NULL AUTO_INCREMENT,
+    id_solicitud INT NOT NULL,
+    id_empleado INT NULL,
+    puntaje DECIMAL(5,2) NOT NULL DEFAULT 0,
+    capacidad_pago DECIMAL(12,2) NULL,
+    recomendacion ENUM('revision', 'aprobado', 'rechazado') NOT NULL DEFAULT 'revision',
+    observaciones TEXT NULL,
+    fecha_evaluacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_evaluacion),
+    UNIQUE INDEX idx_evaluacion_solicitud (id_solicitud),
+    CONSTRAINT fk_eval_solicitud FOREIGN KEY (id_solicitud) REFERENCES solicitud (id_solicitud) ON DELETE CASCADE,
+    CONSTRAINT fk_eval_empleado FOREIGN KEY (id_empleado) REFERENCES empleado (id_empleado) ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: comision
+-- ==============================================
+CREATE TABLE IF NOT EXISTS comision (
+    id_comision INT NOT NULL AUTO_INCREMENT,
+    id_pago INT NOT NULL,
+    concepto VARCHAR(100) NOT NULL,
+    tipo ENUM('fija', 'porcentaje') NOT NULL DEFAULT 'fija',
+    valor DECIMAL(12,2) NOT NULL,
+    monto_cobrado DECIMAL(12,2) NOT NULL DEFAULT 0,
+    fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_comision),
+    INDEX idx_comision_pago (id_pago),
+    CONSTRAINT fk_com_pago FOREIGN KEY (id_pago) REFERENCES pago (id_pago) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- ==============================================
+-- TABLA: parametro
+-- ==============================================
+CREATE TABLE IF NOT EXISTS parametro (
+    id_parametro INT NOT NULL AUTO_INCREMENT,
+    clave VARCHAR(50) NOT NULL,
+    valor VARCHAR(255) NOT NULL,
+    descripcion VARCHAR(255) NULL,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_parametro),
+    UNIQUE INDEX idx_parametro_clave (clave)
+) ENGINE = InnoDB;
+
+-- ==============================================
 -- DATOS BASE: metodo_pago
 -- ==============================================
 INSERT IGNORE INTO metodo_pago (nombre_metodo) VALUES
@@ -159,3 +307,28 @@ INSERT IGNORE INTO metodo_pago (nombre_metodo) VALUES
 ('Daviplata'),
 ('Transferencia bancaria'),
 ('Efectivo');
+
+-- ==============================================
+-- DATOS BASE: oficina
+-- ==============================================
+INSERT IGNORE INTO oficina (nombre, ciudad, direccion, telefono) VALUES
+('Oficina Principal', 'Bogotá', 'Calle 100 # 20-30', '6017451200'),
+('Oficina Norte', 'Medellín', 'Carrera 45 # 12-08', '6043215500'),
+('Oficina Sur', 'Cali', 'Avenida 6N # 24-15', '6028893400');
+
+-- ==============================================
+-- DATOS BASE: tipo_credito
+-- ==============================================
+INSERT IGNORE INTO tipo_credito (nombre, descripcion, monto_minimo, monto_maximo, tasa_interes, plazo_maximo) VALUES
+('Microcrédito Personal', 'Crédito de consumo personal a corto plazo', 500000, 5000000, 2.50, 24),
+('Crédito Pequeño Empresa', 'Capital de trabajo para pequeños comercios', 1000000, 15000000, 2.20, 36),
+('Crédito por Libranza', 'Descuento sobre nómina mensual', 2000000, 30000000, 1.80, 60);
+
+-- ==============================================
+-- DATOS BASE: parametro
+-- ==============================================
+INSERT IGNORE INTO parametro (clave, valor, descripcion) VALUES
+('PUNTAJE_MINIMO_APROBACION', '60', 'Puntaje mínimo para aprobar una solicitud'),
+('MONTO_MAXIMO_SIN_GARANTIA', '3000000', 'Monto máximo sin garantía registrada'),
+('INTERES_MORA_PORCENTAJE', '1.50', 'Interés de mora mensual en créditos vencidos'),
+('DIAS_VIGENCIA_SOLICITUD', '30', 'Días de vigencia de una solicitud antes de expirar');

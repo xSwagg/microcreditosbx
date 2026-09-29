@@ -1,34 +1,30 @@
-const pool = require('../config/db');
+const Legacy = require('../models/legacy.model');
+const ctrlUsuario = require('../controllers/usuarios.controller');
+const ctrlSolicitud = require('../controllers/solicitudes.controller');
+const ctrlPago = require('../controllers/pagos.controller');
 
 const registrar = async (req, res) => {
-  const ctrl = require('../controllers/usuarios.controller');
-  return ctrl.registro(req, res);
+  return ctrlUsuario.registro(req, res);
 };
 
 const solicitar = async (req, res) => {
-  const ctrl = require('../controllers/solicitudes.controller');
-  return ctrl.crear(req, res);
+  return ctrlSolicitud.crear(req, res);
 };
 
 const pagar = async (req, res) => {
-  const ctrl = require('../controllers/pagos.controller');
-  return ctrl.registrar(req, res);
+  return ctrlPago.registrar(req, res);
 };
 
 const verSolicitudes = async (req, res) => {
   try {
     const { correo } = req.params;
 
-    const [usuario] = await pool.query('SELECT id_usuario FROM usuario WHERE correo = ?', [correo]);
+    const usuario = await Legacy.findUsuarioByCorreo(correo);
     if (!usuario) {
       return res.status(404).json({ ok: false, msg: 'Usuario no encontrado' });
     }
 
-    const [solicitudes] = await pool.query(
-      `SELECT id_solicitud, monto, fecha, estado FROM solicitud
-       WHERE id_usuario = ? ORDER BY fecha DESC`,
-      [usuario.id_usuario]
-    );
+    const solicitudes = await Legacy.getSolicitudesPorCorreo(correo);
 
     res.json({ ok: true, solicitudes });
   } catch (err) {
@@ -40,16 +36,7 @@ const verCredito = async (req, res) => {
   try {
     const { correo } = req.params;
 
-    const [filas] = await pool.query(
-      `SELECT c.monto_aprobado, c.saldo_pendiente, c.cuotas_totales, c.cuotas_pagadas
-       FROM credito c
-       JOIN solicitud s ON c.id_solicitud = s.id_solicitud
-       JOIN usuario u ON s.id_usuario = u.id_usuario
-       WHERE u.correo = ? AND c.saldo_pendiente > 0 LIMIT 1`,
-      [correo]
-    );
-    const credito = filas[0];
-
+    const credito = await Legacy.getCreditoActivoPorCorreo(correo);
     if (!credito) {
       return res.json({ ok: true, mensaje: 'No tienes créditos activos' });
     }
