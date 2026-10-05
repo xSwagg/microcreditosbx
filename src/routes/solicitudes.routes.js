@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/solicitudes.controller');
+const verifyToken = require('../middleware/auth.middleware');
 
 // SOLICITUDES (público)
 router.get('/solicitudes', ctrl.getAll);                          // GET    /api/solicitudes?estado=
@@ -10,8 +11,8 @@ router.get('/usuario/:usuario_id/solicitudes', ctrl.getByUsuario); // GET /api/u
 router.post('/solicitudes', ctrl.crear);                          // POST   /api/solicitudes
 
 // ADMIN - FLUJO DE SOLICITUDES
-router.put('/admin/solicitudes/:solicitud_id/revision', ctrl.pasarRevision); // PUT /api/admin/solicitudes/:id/revision
-router.put('/admin/solicitudes/:solicitud_id/aprobar', ctrl.aprobar);        // PUT /api/admin/solicitudes/:id/aprobar
-router.put('/admin/solicitudes/:solicitud_id/rechazar', ctrl.rechazar);      // PUT /api/admin/solicitudes/:id/rechazar?observaciones=
+router.put('/admin/solicitudes/:solicitud_id/revision', verifyToken, ctrl.pasarRevision); // PUT /api/admin/solicitudes/:id/revision
+router.put('/admin/solicitudes/:solicitud_id/aprobar', verifyToken, ctrl.aprobar);        // PUT /api/admin/solicitudes/:id/aprobar
+router.put('/admin/solicitudes/:solicitud_id/rechazar', verifyToken, ctrl.rechazar);      // PUT /api/admin/solicitudes/:id/rechazar?observaciones=
 
 module.exports = router;

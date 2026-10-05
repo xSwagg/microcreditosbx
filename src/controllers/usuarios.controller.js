@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Usuario = require('../models/usuarios.model');
+const config = require('../config/jwt.config');
 
 const ROLES = ['cliente', 'asesor', 'administrador'];
 
@@ -47,8 +49,15 @@ const login = async (req, res) => {
       return res.status(401).json({ ok: false, msg: 'Credenciales incorrectas' });
     }
 
+    const token = jwt.sign(
+      { id: u.id_usuario, correo: u.correo, rol: u.rol },
+      config.jwt.secret,
+      { expiresIn: config.jwt.expiresIn }
+    );
+
     res.json({
       ok: true,
+      token,
       data: {
         id: u.id_usuario,
         nombre: u.nombre,
