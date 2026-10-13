@@ -5,6 +5,7 @@ const app = express();
 app.use(express.json());
 
 // Rutas
+const authRouter = require('./routes/auth.routes');
 const usuariosRouter = require('./routes/usuarios.routes');
 const bancosRouter = require('./routes/bancos.routes');
 const solicitudesRouter = require('./routes/solicitudes.routes');
@@ -24,6 +25,9 @@ const evaluacionesRouter = require('./routes/evaluaciones.routes');
 const comisionesRouter = require('./routes/comisiones.routes');
 const parametrosRouter = require('./routes/parametros.routes');
 const legacyRouter = require('./routes/legacy.routes');
+
+// Autenticación (register y login son públicas, /me es privada)
+app.use('/api/auth', authRouter);
 
 app.use('/api', usuariosRouter);
 app.use('/api', bancosRouter);
@@ -49,9 +53,9 @@ app.use('/', legacyRouter);
 app.get('/', (req, res) => {
   res.json({
     ok: true,
-    msg: 'MicrocreditosBX API (Node/Express). Docs: /api/registro, /api/login, ...',
+    msg: 'MicrocreditosBX API (Node/Express). Docs: /api/auth/register, /api/auth/login, ...',
     entidades: [
-      'usuarios', 'bancos', 'solicitudes', 'creditos', 'pagos', 'metodos_pago',
+      'auth', 'usuarios', 'bancos', 'solicitudes', 'creditos', 'pagos', 'metodos_pago',
       'notificaciones', 'logs', 'prueba_virtual', 'oficinas', 'empleados',
       'tipos_credito', 'documentos', 'cuotas', 'garantias', 'evaluaciones',
       'comisiones', 'parametros', 'legacy',
