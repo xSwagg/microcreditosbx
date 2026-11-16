@@ -34,7 +34,14 @@ async function inicializarBaseDeDatos() {
     if (tables.length === 0) {
       console.log('⏳ Creando tablas de MicrocreditosBX desde database.sql...');
       const sqlPath = path.join(__dirname, '../../database.sql');
-      const sqlScript = fs.readFileSync(sqlPath, 'utf8');
+      // database.sql está pensado para importarse a mano (crea y usa la base
+      // 'micropsev2'). En producción ya estamos conectados a la base indicada
+      // por DB_NAME (por ejemplo 'defaultdb' en Aiven), así que quitamos esas
+      // dos sentencias para crear las tablas en la base correcta.
+      const sqlScript = fs
+        .readFileSync(sqlPath, 'utf8')
+        .replace(/CREATE\s+DATABASE[\s\S]*?;\s*/i, '')
+        .replace(/USE\s+[`"']?\w+[`"']?\s*;\s*/i, '');
 
       const initConn = await mysql.createConnection({
         ...dbConfig,
