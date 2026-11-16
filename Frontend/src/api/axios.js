@@ -3,6 +3,8 @@ import axios from 'axios'
 // Si no existe Frontend/.env se usa el backend local por defecto.
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  // Render (plan gratuito) puede tardar hasta ~1 minuto en despertar.
+  timeout: 90000,
 })
 
 // Agrega el token guardado a todas las peticiones.

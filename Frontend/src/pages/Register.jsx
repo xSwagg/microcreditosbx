@@ -16,6 +16,7 @@ export default function Register() {
   const [formulario, setFormulario] = useState(FORMULARIO_INICIAL)
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [tardando, setTardando] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
 
@@ -33,6 +34,9 @@ export default function Register() {
     }
 
     setEnviando(true)
+    setTardando(false)
+    // Si Render está dormido, avisar al usuario en vez de dejarlo esperando.
+    const aviso = setTimeout(() => setTardando(true), 8000)
 
     try {
       await register({
@@ -49,8 +53,14 @@ export default function Register() {
         state: { registrado: true, correo: formulario.correo },
       })
     } catch (err) {
-      setError(err.response?.data?.msg || 'No se pudo crear la cuenta')
+      setError(
+        err.code === 'ECONNABORTED'
+          ? 'El servidor tardó demasiado en responder. Intenta de nuevo.'
+          : err.response?.data?.msg || 'No se pudo crear la cuenta',
+      )
     } finally {
+      clearTimeout(aviso)
+      setTardando(false)
       setEnviando(false)
     }
   }
@@ -147,6 +157,12 @@ export default function Register() {
           <button type="submit" className="boton boton-ancho" disabled={enviando}>
             {enviando ? 'Creando cuenta...' : 'Registrarme'}
           </button>
+
+          {tardando && (
+            <p className="texto-gris" style={{ marginTop: '0.75rem', textAlign: 'center' }}>
+              El servidor está iniciando; la primera vez puede tardar hasta un minuto.
+            </p>
+          )}
         </form>
 
         <p className="pie-formulario">

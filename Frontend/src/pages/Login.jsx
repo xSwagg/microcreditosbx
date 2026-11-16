@@ -8,6 +8,7 @@ export default function Login() {
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [tardando, setTardando] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -15,13 +16,22 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setEnviando(true)
+    setTardando(false)
+    // Si Render está dormido, avisar al usuario en vez de dejarlo esperando.
+    const aviso = setTimeout(() => setTardando(true), 8000)
 
     try {
       await login(correo, contrasena)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.msg || 'No se pudo iniciar sesión')
+      setError(
+        err.code === 'ECONNABORTED'
+          ? 'El servidor tardó demasiado en responder. Intenta de nuevo.'
+          : err.response?.data?.msg || 'No se pudo iniciar sesión',
+      )
     } finally {
+      clearTimeout(aviso)
+      setTardando(false)
       setEnviando(false)
     }
   }
@@ -66,6 +76,12 @@ export default function Login() {
           <button type="submit" className="boton boton-ancho" disabled={enviando}>
             {enviando ? 'Entrando...' : 'Entrar'}
           </button>
+
+          {tardando && (
+            <p className="texto-gris" style={{ marginTop: '0.75rem', textAlign: 'center' }}>
+              El servidor está iniciando; la primera vez puede tardar hasta un minuto.
+            </p>
+          )}
         </form>
 
         <p className="pie-formulario">
