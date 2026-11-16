@@ -36,14 +36,9 @@ export function AuthProvider({ children }) {
     return perfil
   }
 
-  const register = async (datos) => {
-    const data = await registrar(datos)
-    if (data.token) {
-      localStorage.setItem('token', data.token)
-      setUser(await obtenerPerfil())
-    }
-    return data
-  }
+  // El registro no inicia sesión: la cuenta se crea y el usuario
+  // vuelve al login para entrar con sus credenciales.
+  const register = async (datos) => registrar(datos)
 
   return (
     <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>

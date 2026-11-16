@@ -26,6 +26,12 @@ export default function Register() {
   const enviar = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (formulario.contrasena !== formulario.confirmar) {
+      setError('Las contraseñas no coinciden')
+      return
+    }
+
     setEnviando(true)
 
     try {
@@ -37,7 +43,11 @@ export default function Register() {
         telefono: formulario.telefono,
         contrasena: formulario.contrasena,
       })
-      navigate('/dashboard')
+      // La cuenta ya existe: se envía al login con el correo precargado.
+      navigate('/login', {
+        replace: true,
+        state: { registrado: true, correo: formulario.correo },
+      })
     } catch (err) {
       setError(err.response?.data?.msg || 'No se pudo crear la cuenta')
     } finally {
