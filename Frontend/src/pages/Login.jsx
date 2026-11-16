@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
-  const [correo, setCorreo] = useState('')
+  const location = useLocation()
+  const [correo, setCorreo] = useState(location.state?.correo || '')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -32,6 +33,12 @@ export default function Login() {
         <p className="texto-gris">
           Ingresa con el correo y la contraseña de tu cuenta.
         </p>
+
+        {location.state?.registrado && (
+          <p className="mensaje exito">
+            Cuenta creada correctamente. Inicia sesión con tu correo y contraseña.
+          </p>
+        )}
 
         {error && <p className="mensaje error">{error}</p>}
 
