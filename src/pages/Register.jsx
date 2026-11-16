@@ -37,7 +37,7 @@ export default function Register() {
         telefono: formulario.telefono,
         contrasena: formulario.contrasena,
       })
-      navigate('/perfil')
+      navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.msg || 'No se pudo crear la cuenta')
     } finally {
