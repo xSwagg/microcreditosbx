@@ -3,15 +3,32 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 
+// Orígenes permitidos en producción. Se pueden ampliar con la variable de
+// entorno CORS_ORIGINS (separados por coma), por ejemplo:
+//   CORS_ORIGINS=https://microcreditosbx.vercel.app,https://midominio.com
+const origenesProduccion = (process.env.CORS_ORIGINS || 'https://microcreditosbx.vercel.app')
+  .split(',')
+  .map((origen) => origen.trim())
+  .filter(Boolean);
+
 // En desarrollo el frontend puede abrirse en 5173, 5174, etc.
 // Se permite cualquier puerto de localhost/127.0.0.1 y las peticiones sin
 // origin (Postman, curl, Thunder Client).
 const esOrigenLocal = (origin) =>
   !origin || /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
 
+// Previews y dominio de producción del proyecto en Vercel.
+const esOrigenVercel = (origin) =>
+  /^https:\/\/microcreditosbx(-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
+
+const esOrigenPermitido = (origin) =>
+  esOrigenLocal(origin) ||
+  esOrigenVercel(origin) ||
+  origenesProduccion.includes(origin);
+
 // Middleware para parsear JSON
 app.use(cors({
-  origin: (origin, callback) => callback(null, esOrigenLocal(origin)),
+  origin: (origin, callback) => callback(null, esOrigenPermitido(origin)),
   allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
